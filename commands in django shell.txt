@@ -1,0 +1,119 @@
+Список команд, запускаемых в Django Shell.
+
+1. Запускаем Django Shell.
+	python manage.py shell
+
+2. Импортируем модели из приложения appmain.
+	from appmain.models import *
+	
+3. Создаем двух пользователей.
+	user_1 = User.objects.create_user(username='Никита')
+	user_2 = User.objects.create_user(username='Аня')
+	
+4. Создаем два объекта модели Author, связанные с пользователями.
+	Author.objects.create(authorUser=user_1)
+	Author.objects.create(authorUser=user_2)
+	
+5. Добавляем 4 категории в модель Category.
+	internet = Category.objects.create(name='Интернет')
+	since = Category.objects.create(name='Наука')
+	tech = Category.objects.create(name='Технологии')
+	cul = Category.objects.create(name='Культура')
+	
+6. Добавляем 2 статьи и 1 новость.
+	author_1 = Author.objects.get(pk=1) Заносим модель автора в переменную
+	author_2 = Author.objects.get(pk=2) Заносим модель автора в переменную
+	
+	Post.objects.create(author=author_1, categoryTypes='AR', title='Тест Заголовка Статьи, автор 1', text='Проверка Текста статьи, автор 1')
+	Post.objects.create(author=author_2, categoryTypes='AR', title='Тест Заголовка Статьи, автор 2', text='Проверка Текста статьи, автор 2')
+	Post.objects.create(author=author_1, categoryTypes='NW', title='Тест Заголовка Новостей, автор 1', text='Проверка Текста Новостей, автор 1')
+	
+7. Присваиваем им категории (как минимум в одной статье/новости должно быть не меньше 2 категорий).
+	Post.objects.get(pk=1).postCategory.add(Category.objects.get(pk=1)) Присвоили к 1 статье, категорию Интернет
+	Post.objects.get(pk=1).postCategory.add(Category.objects.get(pk=3))	Присвоили к 1 статье, категорию Технологии
+	
+	Post.objects.get(pk=2).postCategory.add(Category.objects.get(pk=2)) Присвоили ко 2 статье, категорию Наука
+	Post.objects.get(pk=2).postCategory.add(Category.objects.get(pk=4)) Присвоили ко 2 статье, категорию Культура
+	
+	Post.objects.get(pk=3).postCategory.add(Category.objects.get(pk=3)) Присвоили к 1 новости, категорию Технологии
+	Post.objects.get(pk=3).postCategory.add(Category.objects.get(pk=2)) Присвоили к 1 новости, категорию Наука
+	
+8. Создаем как минимум 4 комментария к разным объектам модели Post (в каждом объекте должен быть как минимум один комментарий)
+	Comment.objects.create(commentPost=Post.objects.get(pk=1), commentUser=author_1.authorUser, commentText='Проверка комментария к 1 статьи, автор 1')
+	Comment.objects.create(commentPost=Post.objects.get(pk=2), commentUser=author_2.authorUser, commentText='Проверка комментария к 2 статьи, автор 2')
+	Comment.objects.create(commentPost=Post.objects.get(pk=3), commentUser=author_1.authorUser, commentText='Проверка комментария к 1 новости, автор 1')
+	Comment.objects.create(commentPost=Post.objects.get(pk=2), commentUser=author_2.authorUser, commentText='Проверка комментария к 2 статьи, автор 2')
+	
+9. Применяем функции like() и dislike() к статьям/новостям и комментариям, скорректируем рейтинги этих объектов.
+	К комментариям
+		К 1 комментарию 4 лайка:
+		Comment.objects.get(pk=1).like()
+		Comment.objects.get(pk=1).like()
+		Comment.objects.get(pk=1).like()
+		Comment.objects.get(pk=1).like()
+		
+		К 2 комментарию 3 лайка:
+		Comment.objects.get(pk=2).like()
+		Comment.objects.get(pk=2).like()
+		Comment.objects.get(pk=2).like()
+		
+		К 1 комментарию 2 дизлайк:
+		Comment.objects.get(pk=1).dislike()
+		Comment.objects.get(pk=1).dislike()
+		
+		К 3 комментарию 2 дизлайк:
+		Comment.objects.get(pk=3).dislike()
+		Comment.objects.get(pk=3).dislike()
+		
+		К 4 комментарию 2 лайка:
+		Comment.objects.get(pk=4).like()
+		Comment.objects.get(pk=4).like()
+	
+	К Статьям
+		К 1 статье 3 лайка:
+		Post.objects.get(pk=1).like()
+		Post.objects.get(pk=1).like()
+		Post.objects.get(pk=1).like()
+		
+		К 2 статье 2 лайка:
+		Post.objects.get(pk=2).like()
+		Post.objects.get(pk=2).like()
+		
+		К 1 статье 1 дизлайк:
+		Post.objects.get(pk=1).dislike()
+		
+	К Новостям
+		К 3 новосте 2 лайка:
+		Post.objects.get(pk=3).like()
+		Post.objects.get(pk=3).like()
+		
+10. Обновим рейтинги пользователей.
+	author_1.update_rating()
+	author_2.update_rating()
+	
+11. Выводим username и рейтинг лучшего пользователя (применяя сортировку и возвращая поля первого объекта)
+	best_author = Author.objects.order_by('-ratingAuthor').first()  Получаем объект лучшего автора
+	username = best_author.authorUser.username  Получаем имя пользователя
+	rating = best_author.ratingAuthor  Получаем рейтинг автора
+	print(username, rating) Выводим
+	
+12. Выводим дату добавления, username автора, рейтинг, заголовок и превью лучшей статьи, основываясь на лайках/дислайках к этой статье.
+	best_post = Post.objects.filter(categoryTypes='AR').order_by('-rating').first()
+	
+	date = best_post.dateCreate
+	author_post = best_post.author.authorUser.username
+	rating_post = best_post.rating
+	title_post = best_post.title
+	preview_post = best_post.preview()
+	print(date, author_post, rating_post, title_post, preview_post)
+	
+13. Выводим все комментарии (дата, пользователь, рейтинг, текст) к этой статье.
+	all_comment = Comment.objects.filter(commentPost=best_post)
+	
+	for c in all_comment:
+		date = c.dateCreate
+		user = c.commentUser.username
+		rating = c.rating
+		text = c.commentText
+		print(date, user, rating, text)
+		print("-------------------------------")
